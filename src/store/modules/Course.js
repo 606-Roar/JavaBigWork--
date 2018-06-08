@@ -5,6 +5,10 @@ const CourseModule = {
     nowCourseList: [{
       courseId: "test",
       courseName: "test",
+    },
+    {
+      courseId: "test",
+      courseName: "test",
     }],
     finishCourseList: [],
     currentCourseId: null,//记录最近访问的课程号
@@ -26,7 +30,7 @@ const CourseModule = {
   actions: {
     GetCourseListAction({ state, commit, rootState }) {
       return new Promise((resolve, reject) => {
-        Vue.http.post("123", { teacherId: rootState.userInfo.userId }).then(response => {
+        Vue.http.post(MYURL.CourseList, { teacherId: rootState.userInfo.userId }, { emulateJSON: true,withCredentials: true, emulateJSON: true }).then(response => {
           if (response.status === 200) {
             console.log("NowCourseListAction:" + '获取当前课程列表成功')
             var nowCourseList = response.body.courseList.filter(itenm => {
@@ -40,48 +44,66 @@ const CourseModule = {
             resolve()
           } else {
             console.log("NowCourseListAction:" + '获取当前课程列表失败');
-            reject()
+            reject('获取当前课程列表失败')
           }
         }).catch(error => {
           console.log("NowCourseListAction:", error);
-          reject()
+          reject(error)
         })
       })
     },
-    GetNowCourseListAction({ state, commit, rootState }) {
+    AddNewCourseAction({ state, commit, rootState }, keys) {
       return new Promise((resolve, reject) => {
-        Vue.http.post("123", { teacherId: rootState.userInfo.userId }).then(response => {
+        Vue.http.post(MYURL.CourseList, { teacherId: rootState.userInfo.userId, courseName: keys.courseName }, { emulateJSON: true,withCredentials: true, emulateJSON: true }).then(response => {
           if (response.status === 200) {
-            console.log("NowCourseListAction:" + '获取当前课程列表成功')
-            commit('SaveNowCourseList', response.body.nowCourseList)
-            resolve()
+            console.log("AddNewCourseAction:")
+
+
+            resolve();
           } else {
-            console.log("NowCourseListAction:" + '获取当前课程列表失败');
-            reject()
+            console.log("AddNewCourseAction:" + '获取当前课程列表失败');
+            reject('')
           }
         }).catch(error => {
-          console.log("NowCourseListAction:", error);
-          reject()
+          console.log("AddNewCourseAction:", error);
+          reject(error)
         })
       })
-    },
-    GetFinishCourseListAction({ state, commit, rootState }) {
-      return new Promise((resolve, reject) => {
-        Vue.http.post("123", { teacherId: rootState.userInfo.userId }).then(response => {
-          if (response.status === 200) {
-            console.log("FinishCourseListAction:" + '获取已完成课程列表成功')
-            commit('SaveFinishCourseList', response.body.finishCourseList)
-            resolve()
-          } else {
-            console.log("FinishCourseListAction:" + '获取已完成课程列表失败');
-            reject()
-          }
-        }).catch(error => {
-          console.log("FinishCourseListAction:", error);
-          reject()
-        })
-      })
-    },
+    }
+    // GetNowCourseListAction({ state, commit, rootState }) {
+    //   return new Promise((resolve, reject) => {
+    //     Vue.http.post("123", { teacherId: rootState.userInfo.userId },{ emulateJSON :true,withCredentials: true }).then(response => {
+    //       if (response.status === 200) { 
+    //         console.log("NowCourseListAction:" + '获取当前课程列表成功')
+    //         commit('SaveNowCourseList', response.body.nowCourseList)
+    //         resolve()
+    //       } else {
+    //         console.log("NowCourseListAction:" + '获取当前课程列表失败');
+    //         reject("获取当前课程列表失败")
+    //       }
+    //     }).catch(error => {
+    //       console.log("NowCourseListAction:", error);
+    //       reject(error)
+    //     })
+    //   })
+    // },
+    // GetFinishCourseListAction({ state, commit, rootState }) {
+    //   return new Promise((resolve, reject) => {
+    //     Vue.http.post("123", { teacherId: rootState.userInfo.userId },{withCredentials: true, emulateJSON: true }).then(response => {
+    //       if (response.status === 200) {
+    //         console.log("FinishCourseListAction:" + '获取已完成课程列表成功')
+    //         commit('SaveFinishCourseList', response.body.finishCourseList)
+    //         resolve()
+    //       } else {
+    //         console.log("FinishCourseListAction:" + '获取已完成课程列表失败');
+    //         reject()
+    //       }
+    //     }).catch(error => {
+    //       console.log("FinishCourseListAction:", error);
+    //       reject()
+    //     })
+    //   })
+    // },
   },
   getters: {}
 }

@@ -71,7 +71,7 @@ const vueRouter = new Router({
     { path: '/login', name: '登录', component: Login },
 
     {
-      path: '/Home',
+      path: '/Home/:userName',
       name: 'Home',
       component: MainPage,
       redirect: { name: 'CourseList' },
@@ -81,6 +81,7 @@ const vueRouter = new Router({
           path: 'TeacherManager',
           name: 'TeacherManager',
           component: TeacherManager,
+          redirect: { name: 'TeacherList' },
           children: [
             {
               path: 'TeacherList',
@@ -100,7 +101,7 @@ const vueRouter = new Router({
           component: CourseCreate
         },
         {
-          path: 'CourseDetails',
+          path: 'CourseDetails/:courseId',
           name: "CourseDetails",
           component: CourseDetails,
           redirect: { name: 'CourseDetailsIndex' },
@@ -143,7 +144,7 @@ const vueRouter = new Router({
             },
             {
 
-              path: 'SingleWork',
+              path: 'SingleWork/:workId',
               name: "SingleWork",
               component: SingleWork
             },
@@ -154,7 +155,7 @@ const vueRouter = new Router({
               component: Setting
             },
             {
-              path: 'SingleAttendance',
+              path: 'SingleAttendance/:attendanceId',
               name: "SingleAttendance",
               component: SingleAttendance
             },

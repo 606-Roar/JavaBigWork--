@@ -14,9 +14,9 @@
                             </div>
                         </div>
                         <div class="projectlist">
-                            <div class="projectitem" v-for="item in course.nowCourseList" :key="item.projectId">
-                                <router-link :to="{name: 'CourseDetails', params: {projectId: item.projectId}}">
-                                    <projectItem :name="item.projectName" :img="item.projectLogo" :proid="item.projectId" :state="item.projectState">
+                            <div class="projectitem" v-for="item in course.nowCourseList" :key="item.courseId">
+                                <router-link :to="{name: 'CourseDetails', params: {courseId: item.courseId,courseName:item.courseName}}">
+                                    <projectItem :courseName="item.courseName" :img="item.projectLogo" :courseId="item.courseId" :state="item.projectState">
                                     </projectItem>
                                 </router-link>
                             </div>
@@ -27,9 +27,9 @@
                             <div class="title">已完结的课程</div>
                         </div>
                         <div class="projectlist">
-                            <div class="projectitem" v-for="item in course.finishCourseList" :key="item.projectId">
-                                <router-link :to="{name: 'CourseDetails', params: {projectId: item.projectId}}">
-                                    <projectItem :name="item.projectName" :img="item.projectLogo" :proid="item.projectId" :state="item.projectState"></projectItem>
+                            <div class="projectitem" v-for="item in course.finishCourseList" :key="item.courseId">
+                                <router-link :to="{name: 'CourseDetails', params: {courseId: item.courseId,courseName:item.courseName}}">
+                                    <projectItem :courseName="item.courseName" :img="item.projectLogo" :courseId="item.courseId" :state="item.projectState"></projectItem>
                                 </router-link>
                             </div>
                         </div>
@@ -53,8 +53,8 @@ export default {
         // Asidenav
     },
     created: function() {
-        this.CourseListAction();
-        this.GetFinishCourseListAction();
+     
+        this.GetCourseList();
     },
     mounted: function() {},
 
@@ -66,13 +66,13 @@ export default {
     },
     methods: {
         ...mapActions(["GetCourseListAction"]),
-         async GetNowCourseListAction() {
+        async GetCourseList() {
             try {
                 await this.GetCourseListAction();
             } catch (error) {
                 console.log(error);
             }
-        },
+        }
     }
 };
 </script>

@@ -5,7 +5,7 @@
       <div class="myheader">
         <div class="header_myleft" @click="toIndex">
           <a href="#/index/project-list">
-            <span class="topbar-product-name">Index</span>
+            <span class="topbar-product-name">平时成绩管理系统</span>
           </a>
         </div>
         <div class="header_right">
@@ -30,7 +30,7 @@
             <Avatar icon="person" />
             <DropdownMenu slot="list">
               <DropdownItem name='个人中心'>个人中心</DropdownItem>
-              <DropdownItem v-if="userInfo.userpower===1" name='教师管理'>教师管理</DropdownItem>
+              <DropdownItem v-if="userInfo.userPower===1" name='教师管理'>教师管理</DropdownItem>
               <DropdownItem name='登出'>登出</DropdownItem>
             </DropdownMenu>
           </Dropdown>
@@ -113,7 +113,7 @@ export default {
 }
 
 .topbar-product-name {
-    font-size: 30px;
+    font-size: 24px;
     color: #fff;
     margin-right: 20px;
     /*vertical-align: middle;*/

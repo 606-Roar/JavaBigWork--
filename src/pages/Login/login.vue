@@ -6,13 +6,13 @@
                     <p>成绩管理系统</p>
                 </div>
                 <el-form :model="loginForm" :rules="rules" ref="loginForm">
-                    <el-form-item prop="username">
-                        <el-input v-model="loginForm.username" placeholder="用户名">
+                    <el-form-item prop="userName">
+                        <el-input v-model="loginForm.userName" placeholder="用户名">
                             <span></span>
                         </el-input>
                     </el-form-item>
                     <el-form-item prop="password">
-                        <el-input type="password" placeholder="密码" v-model="loginForm.password"></el-input>
+                        <el-input type="password" placeholder="密码" v-model="loginForm.passWord"></el-input>
                     </el-form-item>
                     <el-form-item>
                         <el-button type="primary" @click="submitForm('loginForm')" class="submit_btn">登陆</el-button>
@@ -33,14 +33,14 @@ export default {
     data() {
         return {
             loginForm: {
-                username: "",
-                password: ""
+                userName: "",
+                passWord: ""
             },
             rules: {
-                username: [
+                userName: [
                     { required: true, message: "请输入用户名", trigger: "blur" }
                 ],
-                password: [
+                passWord: [
                     { required: true, message: "请输入密码", trigger: "blur" }
                 ]
             },
@@ -49,8 +49,6 @@ export default {
         };
     },
     mounted() {
-        // this.$router.push({ name: '首页' })
-        // this.LoginAction({username:'123',userid:'asd'})
         this.showLogin = true;
         let userInfo = JSON.parse(localStorage.getItem("userInfo"));
         console.log(userInfo);
@@ -61,21 +59,26 @@ export default {
     methods: {
         ...mapActions(["LoginAction"]),
         submitForm(formName) {
+            const UserName = this.loginForm.userName;
             this.$refs[formName].validate(valid => {
                 if (valid) {
                     this.loading = true;
                     this.$http
-                        .post("http://localhost:8080/123", {
-                            name: this.loginForm.username,
-                            password: this.loginForm.password
-                        })
+                        .post(MYURL.LOGIN, {
+                            teacherid:this.loginForm.userName,
+                            // name: this.loginForm.userName,
+                            password: this.loginForm.passWord
+                        },
+                            {emulateJSON :true}
+                        )
                         .then(response => {
                             if (response.status === 200) {
                                 console.log(response.body);
                                 console.log("验证通过");
                                 let userInfo = {
-                                    username: this.loginForm.username,
-                                    userid: response.body.userid
+
+                                    userName: UserName,
+                                    userId: this.loginForm.userName,
                                 };
                                 //保存用户信息
                                 this.LoginAction(userInfo);
@@ -86,18 +89,24 @@ export default {
                                     "userInfo",
                                     JSON.stringify(this.userInfo)
                                 );
-                             
+
                                 this.$message.success("登录成功");
-                                this.$router.push({ name: "Home" });
+
+                                this.$router.push({
+                                    name: "Home",
+                                    params: { userName: UserName }
+                                });
                             } else {
-                        
                                 this.$message.error("用户名或密码错误");
                             }
                             this.loading = false;
                         })
                         .catch(error => {
-                             this.$router.push({ name: "Home" });
-                             this.$message.error("服务器问题");
+                            this.$router.push({
+                                name: "Home",
+                                params: { userName: UserName }
+                            });
+                            this.$message.error("服务器问题");
                             this.loading = false;
                         });
                 } else {

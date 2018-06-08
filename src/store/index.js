@@ -99,7 +99,7 @@ const store = new Vuex.Store({
     },
     UpDateProjectListAction({ commit }, userId) {
       return new Promise((resolve, reject) => {
-        Vue.http.get(MYURL.URL_PrepareProjectList, { userId: userId })
+        Vue.http.get(MYURL.URL_PrepareProjectList, { userId: userId }, { withCredentials: true })
           .then(response => {
             if (response.status === 200) {
               commit('SavePrepareProjectList', response.body.projectList)
@@ -112,7 +112,7 @@ const store = new Vuex.Store({
     },
     UpDateStartProjectListAction({ commit }, userId) {
       return new Promise((resolve, reject) => {
-        Vue.http.get(MYURL.URL_StartProjectList, { userId: userId })
+        Vue.http.get(MYURL.URL_StartProjectList, { userId: userId },{ withCredentials: true })
           .then(response => {
             if (response.status === 200) {
               commit('SaveStartProjectList', response.body.projectList)
@@ -125,7 +125,7 @@ const store = new Vuex.Store({
     },
     UpDateFinishProjectListAction({ commit }, userId) {
       return new Promise((resolve, reject) => {
-        Vue.http.get(MYURL.URL_FinishProjectList, { userId: userId }).then(response => {
+        Vue.http.get(MYURL.URL_FinishProjectList, { userId: userId },{ withCredentials: true }).then(response => {
           if (response.status === 200) {
             commit('SaveFinishProjectList', response.body.projectList)
             resolve()
@@ -137,7 +137,7 @@ const store = new Vuex.Store({
     },
     AddPrepareProjectListAction({ commit }, projectId, projectName) {
       return new Promise((resolve, reject) => {
-        Vue.http.get(MYURL.URL_FinishProjectList, { userId: userId }).then(response => {
+        Vue.http.get(MYURL.URL_FinishProjectList, { userId: userId },{ withCredentials: true }).then(response => {
           if (response.status === 200) {
             resolve()
           } else {
@@ -153,8 +153,8 @@ const store = new Vuex.Store({
   modules: {
     course: CourseModule,
     attendance: AttendanceModule, // attendance moudle
-    work:WorkModule,
-    student:StudentModule,
+    work: WorkModule,
+    student: StudentModule,
 
     // staff: Staff, //staff moudle
     // task: Task, //task moudle

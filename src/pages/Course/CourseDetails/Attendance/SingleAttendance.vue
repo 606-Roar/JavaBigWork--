@@ -57,7 +57,7 @@
                 </el-main>
             </el-container>
         </el-container>
-        <el-dialog title="本次未到统计" :visible.sync="absentDialog.dialogVisible" width="" :before-close="handleClose">
+        <el-dialog title="本次未到统计" :visible.sync="absentDialog.dialogVisible" width="">
             <el-table :data="singleAbsentTableData" stripe style="width: 100%">
                 <el-table-column prop="state" label="状态" align="left">
                 </el-table-column>
@@ -72,6 +72,7 @@
     </div>
 </template>
 <script>
+import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
         return {
@@ -81,6 +82,7 @@ export default {
             reportName: "123",
             tableIndex: 0,
             radioState: "",
+            attendanceId: null,
             absentDialog: {
                 dialogVisible: false
             },
@@ -102,53 +104,7 @@ export default {
                     label: "请假"
                 }
             ],
-            tableData: [
-                {
-                    id: "31501397",
-                    name: "zhuyunwu",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "wanghoulun",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "fanping",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "spongebob ",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "spongebob ",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "spongebob ",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "spongebob ",
-                    state: ""
-                },
-                {
-                    id: "31501397",
-                    name: "spongebob ",
-                    state: ""
-                },
-                {
-                    id: "31501398",
-                    name: "spongebob ",
-                    state: ""
-                }
-            ],
+            tableData: [{}],
             singleAbsentTableData: [
                 {
                     state: "请假",
@@ -158,10 +114,22 @@ export default {
         };
     },
     created() {
-        this.reportName = this.$route.params.name;
-        console.log(this.$route.params.name);
+        try {
+            this.reportName = this.$route.params.attendanceName;
+            this.attendanceId = this.$route.params.attendanceId;
+            this.GetAttendanceDetailListAction();
+            this.tableData = this.attendance.attendanceDetailList;
+        } catch (error) {}
+    },
+    computed: {
+        ...mapState({
+            attendance: state => state.attendance,
+            userInfo: "userInfo"
+        })
     },
     methods: {
+        ...mapActions(["GetAttendanceDetailListAction"]),
+
         HandleChange(value) {
             // console.log(value);
             if (value != "") this.NextStudent();
@@ -188,7 +156,8 @@ export default {
         },
         HandleSave() {
             absentDialog.dialogVisible = false;
-        }
+        },
+        handleClose() {}
     }
 };
 </script>

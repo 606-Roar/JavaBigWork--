@@ -13,7 +13,7 @@ const StudentModule = {
         //获取学生列表
         GetStudentListAction({ state, commit, rootState }, courseId) {
             return new Promise((resolve, reject) => {
-                Vue.http.post("123", { courseId: courseId }).then(response => {
+                Vue.http.post("123", { courseId: courseId },{withCredentials: true, emulateJSON: true }).then(response => {
                     if (response.status === 200) {
                         console.log("StudentListAction:", 'resolve')
                         commit('SaveStudentList', response.body.studentList);
@@ -29,9 +29,9 @@ const StudentModule = {
             })
         },
         //添加学生
-        AddStudentListAction({ state, commit, rootState }, courseId, studentList) {
+        AddStudentListAction({ state, commit, rootState }, keys) {
             return new Promise((resolve, reject) => {
-                Vue.http.post("123", { courseId: courseId, studentList: StudentList }).then(response => {
+                Vue.http.post("123", { courseId: keys.courseId, studentList: keys.studentList },{withCredentials: true, emulateJSON: true }).then(response => {
                     if (response.status === 200) {
                         console.log("AddStudentListAction:", 'resolve')
                     

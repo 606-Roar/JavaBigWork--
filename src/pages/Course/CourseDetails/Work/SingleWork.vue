@@ -5,60 +5,79 @@
                 <el-row>
                     <el-breadcrumb class="title" separator-class="el-icon-arrow-right">
                         <el-breadcrumb-item :to="{ name:'Work' }">作业详情</el-breadcrumb-item>
-                        <el-breadcrumb-item style="font-size:18px;  margin-top: 5px;">{{reportName}}</el-breadcrumb-item>
+                        <el-breadcrumb-item style="font-size:18px;  margin-top: 5px;">{{workDetail.workName}}</el-breadcrumb-item>
                     </el-breadcrumb>
                 </el-row>
             </el-header>
-            <el-main>
+            <p>1</p>
+            <el-tabs type="border-card" style="">
+                <el-tab-pane label="作业内容">
+                    <el-form ref="form" :model="form" label-width="80px">
+                        <el-form-item label="作业名称" size="medium">
+                            <el-input v-model="form.name"></el-input>
+                        </el-form-item>
 
-                <el-form ref="form" :model="form" label-width="80px">
-                    <el-form-item label="作业名称" size="medium">
-                        <el-input v-model="form.name"></el-input>
-                    </el-form-item>
+                        <el-form-item label="开放时间">
+                            <el-col :span="11">
+                                <el-date-picker type="date" placeholder="选择日期" v-model="form.date1" style="width: 100%;"></el-date-picker>
+                            </el-col>
+                            <el-col class="line" :span="2">-</el-col>
+                            <el-col :span="11">
+                                <el-time-picker type="fixed-time" placeholder="选择时间" v-model="form.date2" style="width: 100%;"></el-time-picker>
+                            </el-col>
+                        </el-form-item>
+                        <el-form-item label="文件资源">
+                            <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
+                                <el-button size="small" type="primary">点击上传</el-button>
+                                <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                            </el-upload>
+                        </el-form-item>
+                        <el-form-item label="补充说明">
+                            <el-input type="textarea" v-model="form.desc"></el-input>
+                        </el-form-item>
+                    </el-form>
 
-                    <el-form-item label="开放时间">
-                        <el-col :span="11">
-                            <el-date-picker type="date" placeholder="选择日期" v-model="form.date1" style="width: 100%;"></el-date-picker>
-                        </el-col>
-                        <el-col class="line" :span="2">-</el-col>
-                        <el-col :span="11">
-                            <el-time-picker type="fixed-time" placeholder="选择时间" v-model="form.date2" style="width: 100%;"></el-time-picker>
-                        </el-col>
-                    </el-form-item>
-                    <!-- <el-form-item label="活动性质">
+                    <el-button class="save-button" type="primary">编辑</el-button>
+                </el-tab-pane>
+                <el-tab-pane label="提交情况">
+                    <el-table :data=" tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" size="small" style="width: 100% ;" height="480px" @selection-change="handleSelectionChange">
+                        <el-table-column v-if="pageState==='edit'" type="selection" width="55" align="center">
+                        </el-table-column>
 
-                        <el-checkbox-group v-model="form.type">
-                            <el-checkbox label="美食/餐厅线上活动" name="type"></el-checkbox>
-                            <el-checkbox label="地推活动" name="type"></el-checkbox>
-                            <el-checkbox label="线下主题活动" name="type"></el-checkbox>
-                            <el-checkbox label="单纯品牌曝光" name="type"></el-checkbox>
-                        </el-checkbox-group>
-                    </el-form-item> -->
-                    <el-form-item label="特殊资源">
-                        <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
-                            <el-button size="small" type="primary">点击上传</el-button>
-                            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
-                        </el-upload>
-                    </el-form-item>
-                    <el-form-item label="补充说明">
-                        <el-input type="textarea" v-model="form.desc"></el-input>
-                    </el-form-item>
-                    <!-- <el-form-item>
-                        <el-button type="primary" @click="onSubmit">立即创建</el-button>
-                        <el-button>取消</el-button>
-                    </el-form-item> -->
-                </el-form>
+                        <el-table-column label="学号" align="left">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 0px">{{ scope.row.studentId }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="姓名" align="left" prop="studentName">
+                        </el-table-column>
+                        <el-table-column label="成绩" align="left" prop="studentName">
+                        </el-table-column>
+                        <!-- <el-table-column v-if="pageState==='edit'" label="操作" align="center">
+              <template slot-scope="scope">
+                <div @click="RemoveStaff(scope.row)">
+                  <i class="el-icon-close"></i>
+                </div>
+              </template>
+            </el-table-column> -->
+                    </el-table>
+                    <el-pagination small layout="prev, pager, next" :total="total" @current-change="current_change">
+                    </el-pagination>
+                </el-tab-pane>
 
-                <el-button class="save-button" type="primary">保存</el-button>
-            </el-main>
+            </el-tabs>
 
         </el-container>
     </div>
 </template>
 <script>
+import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
         return {
+            total: 15, //默认数据总数
+            pagesize: 11, //每页的数据条数
+            currentPage: 1, //默认开始页面
             form: {
                 name: "",
                 region: "",
@@ -72,56 +91,37 @@ export default {
             value6: "123",
             tabPosition: "left",
             radio2: 0,
-            reportName: "创建新作业",
-            tableData: [
-                {
-                    name: "zhuyunwu",
-                    email: "zhuyunwu@163.com",
-                    state: "到",
-                    recordTime: "12:00",
-                    nowstate: "在线"
-                },
-                {
-                    name: "wanghoulun",
-                    email: "wanghoulun@163.com",
-                    state: "缺席",
-                    recordTime: "12:00",
-                    nowstate: "离线"
-                },
-                {
-                    name: "fanping",
-                    email: "fanping@163.com",
-                    state: "到",
-                    recordTime: "14:01",
-                    nowstate: "在线"
-                },
-                {
-                    name: "spongebob ",
-                    email: "fanping@163.com",
-                    state: "到",
-                    recordTime: "17:02",
-                    nowstate: "离线"
-                }
-            ]
+            tableData: [],
+            workDetail: {
+                workName: ".."
+            }
         };
     },
     created() {
         this.InitData();
     },
     methods: {
+        ...mapActions(["GetWorkByIdAction"]),
         filterHandler(value, row, column) {
             const property = column["property"];
             return row[property] === value;
         },
-        InitData() {
-            this.reportName = this.$route.params.name;
-            // let now=new Date();
-            // this.reportName=myDate.getFullYear()+myDate.getMonth()+myDate.getDate();
-        }
+        async InitData() {
+            try {
+                this.workDetail = await GetWorkByIdAction(this.$route.params.workId);
+            } catch (error) {
+                this.$message.error("请求失败了😫")
+            }
+        },
+        
     }
 };
 </script>
 <style scoped>
+.el-tabs {
+    /* margin-top: 5px; */
+    min-height: 550px;
+}
 .el-form {
     margin-top: 50px;
     margin-right: 20%;
@@ -129,9 +129,7 @@ export default {
 }
 .save-button {
     width: 100px;
-    position: absolute;
-    right: 2%;
-    bottom: 15%;
+    margin: 3vh;
     /* top: 80%; */
     /* left: 90%; */
     /* margin-bottom: 15px;

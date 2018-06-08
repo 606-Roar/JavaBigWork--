@@ -13,7 +13,7 @@
       <el-row>
         <el-row class="item-name">
           <el-col :span="24">
-            <div style="font-size:16px ;font-weight:bold;">{{name}}</div>
+            <div style="font-size:16px ;font-weight:bold;">{{courseName}}</div>
           </el-col>
         </el-row>
         <el-row class="item-context">
@@ -34,9 +34,8 @@ export default {
   methods: {},
   props: [
     'img',
-    'name',
-    'proid',
-    'name',
+    'courseName',
+    'courseId',
     'state'
   ],
   created() {

@@ -64,7 +64,9 @@ export default {
         };
     },
     watch: {},
-    created() {},
+    created() {
+        this.inputName=this.$route.params.courseId;
+    },
     methods: {
         handleClick() {},
         // 加载失败的callback

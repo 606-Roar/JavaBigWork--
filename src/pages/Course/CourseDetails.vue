@@ -46,7 +46,8 @@ export default {
         };
     },
     created: function() {
-        console.log(this.$route.params.projectId);
+        this.title=this.$route.params.courseName;
+        // console.log(this.$route.params.courseName);
         // this.IntoProjectDetailsAction(this.$route.params.projectId);
     },
     methods: {

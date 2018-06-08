@@ -21,12 +21,12 @@
                             </el-col>
                         </div>
                     </el-row>
-                    <el-table :data="tableData" style="width: 100%">
+                    <el-table :data="tableData" style="width: 100%;height:85%">
                         <el-table-column label="考勤名单" align='left'>
                             <template slot-scope="scope">
                                 <router-link :to="{ name: 'SingleAttendance',
                                 params: {
-                                    name: scope.row.name,
+                                    attendanceName: scope.row.name,
                                     attendanceId:scope.row.attendanceId}}">
                                     <i class="el-icon-document"></i>
                                     <span style="margin-left: 10px;">{{ scope.row.name }}</span>
@@ -40,10 +40,12 @@
                         <el-table-column label="实到人数" align="left" prop="updateTime">
                         </el-table-column>
                     </el-table>
+                    <el-pagination small layout="prev, pager, next" :total="total" @current-change="current_change">
+                    </el-pagination>
                 </el-main>
             </el-container>
         </el-container>
-        <el-dialog title="缺课统计" :visible.sync="AttendanceAccountDialog.dialogVisible" width="" :before-close="handleClose">
+        <el-dialog title="缺课统计" :visible.sync="AttendanceAccountDialog.dialogVisible" width="">
             <el-table :data="absentTable" stripe style="width: 100%">
                 <el-table-column prop="studentId" label="学号" align="left">
                 </el-table-column>
@@ -61,9 +63,13 @@
 <script>
 import LineChart from "../../../../components/Chart/LineChart.js";
 // import Chart from 'chart.js';
+import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
         return {
+            total: 0, //默认数据总数
+            pagesize: 10, //每页的数据条数
+            currentPage: 1, //默认开始页面
             placeholder: "搜索考勤报表",
             searchKey: "",
             AttendanceAccountDialog: {
@@ -71,25 +77,13 @@ export default {
             },
             tableData: [
                 {
+                    attendanceId: "1",
                     name: "2018-04-13 考勤记录",
                     updateTime: "2018-04-13 21:00",
                     urlName: "SingleAttendance"
                 },
                 {
-                    name: "2018-04-12 考勤记录",
-                    updateTime: "2018-04-12 21:00",
-                    urlName: "SingleAttendance"
-                }
-            ],
-            tables: [
-                {
-                    attendanceId: "",
-                    name: "2018-04-13 考勤记录",
-                    updateTime: "2018-04-13 21:00",
-                    urlName: "SingleAttendance"
-                },
-                {
-                    attendanceId: "",
+                    attendanceId: "2",
                     name: "2018-04-12 考勤记录",
                     updateTime: "2018-04-12 21:00",
                     urlName: "SingleAttendance"
@@ -105,55 +99,92 @@ export default {
         };
     },
     components: {},
+    created: async function() {
+        try {
+            await this.GetAttendanceListAction(this.$route.params.courseId);
+        } catch (error) {
+        } finally {
+            this.tableData = this.attendance.attendanceList;
+        }
+    },
     mounted() {},
     watch: {
         searchKey: function(curval, oldval) {
             if (curval === "") {
-                this.tableData = this.tables;
+                this.tableData = this.attendance.attendanceList;
                 return;
             }
-            this.tableData = this.tables.filter(object => {
+            this.tableData = this.attendance.attendanceList.filter(object => {
                 return object.name.indexOf(curval) >= 0;
             });
         }
     },
+    computed: {
+        ...mapState({
+            attendance: state => state.attendance
+        })
+    },
     methods: {
-        CreateNewSingeleAttendance() {
-            this.$router.push({ name: "SingleAttendance" });
-        },
-        CourseListListAction({ state, commit, rootState }, keys) {
-            return new Promise((resolve, reject) => {
-                Vue.http
-                    .get(MYURL.URL_GETCOURSELIST, { teacherId: keys.teacherId })
-                    .then(response => {
-                        if (response.status === 200) {
-                            console.log(
-                                "AttendanceListAction:" + "获取课程列表成功"
-                            );
-                            commit("SaveCourseList", response.body.courseList);
-                            resolve("200 OK");
-                        } else {
-                            console.log(
-                                "AttendanceListAction:" + "获取课程列表失败"
-                            );
-                            reject("reject");
-                        }
-                    });
+        ...mapActions([
+            "AddNewAttendanceDetailsAction",
+            "GetAttendanceListAction"
+        ]),
+        async CreateNewSingeleAttendance() {
+            const loading = this.$loading({
+                lock: true,
+                text: "Loading",
+                spinner: "el-icon-loading",
+                background: "rgba(0, 0, 0, 0.7)"
             });
-        },
-        ShowAbsentList() {
-            this.FromServers.GetAbsentList(keys)
-                .then(function(result) {
-                    console.log("成功：" + result);
-                })
-                .catch(function(reason) {
-                    console.log("失败：" + reason);
+            try {
+                let attendanceId = await this.AddNewAttendanceDetailsAction(
+                    this.$route.params.CourseId
+                );
+                this.$router.push({
+                    name: "SingleAttendance",
+                    params: {
+                        attendanceId: attendanceId
+                    }
                 });
+            } catch (error) {
+                this.$message.error("抱歉，出了点问题");
+                // console.log(error);
+            } finally {
+                loading.close();
+            }
+        },
+        // CourseListListAction({ state, commit, rootState }, keys) {
+        //     return new Promise((resolve, reject) => {
+        //         Vue.http
+        //             .get(MYURL.URL_GETCOURSELIST, { teacherId: keys.teacherId })
+        //             .then(response => {
+        //                 if (response.status === 200) {
+        //                     console.log(
+        //                         "AttendanceListAction:" + "获取课程列表成功"
+        //                     );
+        //                     commit("SaveCourseList", response.body.courseList);
+        //                     resolve("200 OK");
+        //                 } else {
+        //                     console.log(
+        //                         "AttendanceListAction:" + "获取课程列表失败"
+        //                     );
+        //                     reject("reject");
+        //                 }
+        //             });
+        //     });
+        // },
+        async ShowAbsentList() {
+            await this.GetAbsentList({ courseId: this.$route.params.courseId });
+          
         },
         GetAbsentList(keys) {
             return new Promise((resolve, reject) => {
                 this.$http
-                    .get(MYURL.GETABSENTLIST, { CourseId: keys.CourseId })
+                    .post(
+                        MYURL.GETABSENTLIST,
+                        { courseId: keys.courseId },
+                        { withCredentials: true, emulateJSON: true }
+                    )
                     .then(response => {
                         if (response.status === 200) {
                             resolve(this.response.absentList);
@@ -162,7 +193,8 @@ export default {
                         }
                     });
             });
-        }
+        },
+        handleClose() {}
     }
 };
 </script>
