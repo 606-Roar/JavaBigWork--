@@ -15,13 +15,13 @@
                                 </el-input>
                             </el-col>
                             <el-col :span="14" style=" float: right;">
-                                <el-button class="button" type="primary" size="small" @click="CreateNewSingeleAttendance">今天要点名</el-button>
-                                <el-button class="button" type="primary" size="small" @click="AttendanceAccountDialog.dialogVisible=true">缺课统计</el-button>
+                                <el-button class="button" type="primary" size="small" @click="CreateNewAttendance">今天要点名</el-button>
+                                <!-- <el-button class="button" type="primary" size="small" @click="ShowAbsentList">缺课统计</el-button> -->
                                 <!-- <el-button class="button" size="small" @click="managerCategoryDialog.dialogVisible=true">报表类别</el-button> -->
                             </el-col>
                         </div>
                     </el-row>
-                    <el-table :data="tableData" style="width: 100%;height:85%">
+                    <el-table :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" style="width: 100%;height:85%">
                         <el-table-column label="考勤名单" align='left'>
                             <template slot-scope="scope">
                                 <router-link :to="{ name: 'SingleAttendance',
@@ -33,19 +33,19 @@
                                 </router-link>
                             </template>
                         </el-table-column>
-                        <el-table-column label="最后更新时间" align="left" prop="updateTime">
+                        <el-table-column label="创建时间" align="left" prop="attendanceDate">
                         </el-table-column>
-                        <el-table-column label="应到人数" align="left" prop="updateTime">
+                        <!-- <el-table-column label="应到人数" align="left" prop="updateTime">
                         </el-table-column>
                         <el-table-column label="实到人数" align="left" prop="updateTime">
-                        </el-table-column>
+                        </el-table-column> -->
                     </el-table>
-                    <el-pagination small layout="prev, pager, next" :total="total" @current-change="current_change">
+                    <el-pagination small layout="prev, pager, next" :total="total" :current-page.sync="currentPage"    @current-change="current_change">
                     </el-pagination>
                 </el-main>
             </el-container>
         </el-container>
-        <el-dialog title="缺课统计" :visible.sync="AttendanceAccountDialog.dialogVisible" width="">
+        <el-dialog title="缺课统计" :visible.sync="attendanceAccountDialog.dialogVisible" width="">
             <el-table :data="absentTable" stripe style="width: 100%">
                 <el-table-column prop="studentId" label="学号" align="left">
                 </el-table-column>
@@ -55,7 +55,7 @@
                 </el-table-column>
             </el-table>
             <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="AttendanceAccountDialog.dialogVisible = false">关闭</el-button>
+                <el-button type="primary" @click="attendanceAccountDialog.dialogVisible = false">关闭</el-button>
             </span>
         </el-dialog>
     </div>
@@ -68,11 +68,11 @@ export default {
     data() {
         return {
             total: 0, //默认数据总数
-            pagesize: 10, //每页的数据条数
+            pagesize: 15, //每页的数据条数
             currentPage: 1, //默认开始页面
             placeholder: "搜索考勤报表",
             searchKey: "",
-            AttendanceAccountDialog: {
+            attendanceAccountDialog: {
                 dialogVisible: false
             },
             tableData: [
@@ -95,17 +95,13 @@ export default {
                     StudentName: "你",
                     count: 1
                 }
-            ]
+            ],
+            loading: null
         };
     },
     components: {},
-    created: async function() {
-        try {
-            await this.GetAttendanceListAction(this.$route.params.courseId);
-        } catch (error) {
-        } finally {
-            this.tableData = this.attendance.attendanceList;
-        }
+    created: function() {
+        this.Init();
     },
     mounted() {},
     watch: {
@@ -117,6 +113,9 @@ export default {
             this.tableData = this.attendance.attendanceList.filter(object => {
                 return object.name.indexOf(curval) >= 0;
             });
+        },
+        tableData: function(newQuestion, oldQuestion) {
+            this.total = this.tableData.length;
         }
     },
     computed: {
@@ -127,18 +126,38 @@ export default {
     methods: {
         ...mapActions([
             "AddNewAttendanceDetailsAction",
-            "GetAttendanceListAction"
+            "GetAttendanceListAction",
+            "GetAbsentStaticsAction"
         ]),
-        async CreateNewSingeleAttendance() {
-            const loading = this.$loading({
+        Init() {
+            this.GetAttendanceList();
+        },
+        CreateNewAttendance() {
+            this.GetNewAttendance();
+        },
+        async GetAttendanceList() {
+            try {
+                await this.GetAttendanceListAction({
+                    courseId: parseInt(this.$route.params.courseId)
+                });
+                this.tableData = this.attendance.attendanceList;
+            } catch (error) {
+                console.log("error");
+            }
+        },
+        async GetNewAttendance() {
+            this.loading = this.$loading({
                 lock: true,
                 text: "Loading",
                 spinner: "el-icon-loading",
                 background: "rgba(0, 0, 0, 0.7)"
             });
             try {
+                let keys = {
+                    courseId: parseInt(this.$route.params.courseId)
+                };
                 let attendanceId = await this.AddNewAttendanceDetailsAction(
-                    this.$route.params.CourseId
+                    keys
                 );
                 this.$router.push({
                     name: "SingleAttendance",
@@ -147,54 +166,27 @@ export default {
                     }
                 });
             } catch (error) {
-                this.$message.error("抱歉，出了点问题");
+                this.$notify.error("抱歉，出了点问题");
                 // console.log(error);
             } finally {
-                loading.close();
+                this.loading.close();
             }
         },
-        // CourseListListAction({ state, commit, rootState }, keys) {
-        //     return new Promise((resolve, reject) => {
-        //         Vue.http
-        //             .get(MYURL.URL_GETCOURSELIST, { teacherId: keys.teacherId })
-        //             .then(response => {
-        //                 if (response.status === 200) {
-        //                     console.log(
-        //                         "AttendanceListAction:" + "获取课程列表成功"
-        //                     );
-        //                     commit("SaveCourseList", response.body.courseList);
-        //                     resolve("200 OK");
-        //                 } else {
-        //                     console.log(
-        //                         "AttendanceListAction:" + "获取课程列表失败"
-        //                     );
-        //                     reject("reject");
-        //                 }
-        //             });
-        //     });
-        // },
-        async ShowAbsentList() {
-            await this.GetAbsentList({ courseId: this.$route.params.courseId });
-          
+        ShowAbsentList() {
+            this.GetAbsentList();
         },
-        GetAbsentList(keys) {
-            return new Promise((resolve, reject) => {
-                this.$http
-                    .post(
-                        MYURL.GETABSENTLIST,
-                        { courseId: keys.courseId },
-                        { withCredentials: true, emulateJSON: true }
-                    )
-                    .then(response => {
-                        if (response.status === 200) {
-                            resolve(this.response.absentList);
-                        } else {
-                            reject(new Error(this.statusText));
-                        }
-                    });
-            });
+        async GetAbsentList() {
+            try {
+                await this.GetAbsentStaticsAction({
+                    courseId: this.$route.params.courseId
+                });
+                this.attendanceAccountDialog.dialogVisible = true;
+            } catch (error) {
+                this.$notify.error("出现问题");
+            }
         },
-        handleClose() {}
+        handleClose() {},
+        current_change() {}
     }
 };
 </script>

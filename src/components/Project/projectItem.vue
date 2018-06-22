@@ -16,11 +16,11 @@
             <div style="font-size:16px ;font-weight:bold;">{{courseName}}</div>
           </el-col>
         </el-row>
-        <el-row class="item-context">
+        <!-- <el-row class="item-context">
           <el-col :span="24">
             <div style="font-size:14px;color:#C0C0C0">项目简介:{{state}}</div>
           </el-col>
-        </el-row>
+        </el-row> -->
       </el-row>
       </div>
     </el-card>

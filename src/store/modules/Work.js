@@ -4,47 +4,59 @@ import { tmpdir } from 'os';
 const WorkModule = {
     state: {
         workList: [
-            {
-                workId: "1",
-                name: "说明1",
-                userName: "spongebob",
-                updateTime: "2018-04-13",
-                type: "文档",
-                needpower: 1,
-                workState: "1",
-            },
-            {
-                workId: "1",
-                name: "说明2",
-                userName: "spongebob",
-                updateTime: "2018-04-13",
-                type: "文档",
-                needpower: 1,
-                workState: "2",
-            }, {
-                workId: "1",
-                name: "说明3",
-                userName: "spongebob",
-                updateTime: "2018-04-13",
-                type: "文档",
-                workState: "3",
-            }
-
+          
         ],
+        workSubmissionList: [
+           
+        ],
+        workDetail: {
+           
+        },
         currentWorkId: null,//记录最近访问的课程号
     },
     mutations: {
         SaveWorkList(state, workList) {
-            state.workList = workList
+            state.workList = workList;
+        },
+        SaveWorkSubmissionList(state, workSubmissionList) {
+            state.workSubmissionList = workSubmissionList;
+        },
+        SaveWorkDetail(state, workDetail) {
+            state.workDetail = workDetail;
         },
     },
     actions: {
-        GetWorkListAction({ state, commit, rootState }) {
+        GetWorkListAction({ state, commit, rootState }, keys) {
+            var data = {
+                courseid: keys.courseId,
+            };
             return new Promise((resolve, reject) => {
-                Vue.http.post("123", { courseId: rootState.course.currentCourseId }, { withCredentials: true, emulateJSON: true }).then(response => {
-                    if (response.status === 200) {
+                Vue.http.post(MYURL.WorkList, JSON.stringify(data), { withCredentials: true }).then(response => {
+                    if (response.status === 200 && response.body.code === 1) {
                         console.log("WorkListAction:" + '获取当前考勤列表成功')
-                        commit('SaveWorkList', response.body.workList);
+
+                        var myDate = new Date();
+                        var month = (myDate.getMonth() + 1) > 9 ? (myDate.getMonth() + 1) : ('0' + (myDate.getMonth() + 1));
+                        var today = myDate.getFullYear() + "-" + month + "-" + myDate.getDate();
+
+                        var workList = response.body.myBody;
+                        workList.forEach(element => {
+                            element.workId = element.homeworkid;
+                            element.closeTime = element.homeworkenddate;
+                            element.startTime = element.homeworkstartdate;
+                            element.explain = element.homeworkbody;
+                            element.workName = element.homeworkname;
+                            console.log("today", today);
+                            if (element.closeTime >= today) {
+                                element.workState = "1";
+                            } else if (element.closeTime < today) {
+                                element.workState = "2";
+                            } else if (element.startTime > today) {
+                                element.workState = "3";
+                            }
+
+                        });
+                        commit('SaveWorkList', workList);
                         resolve();
                     } else {
                         console.log("WorkListAction:" + '获取当前考勤列表失败');
@@ -56,11 +68,21 @@ const WorkModule = {
                 })
             })
         },
-        AddNewWorkAction({ state, commit, rootState }) {
+        AddNewWorkAction({ state, commit, rootState }, keys) {
+            var data = keys.workDetail;
+            data.homeworkenddate = data.closeTime;
+            data.homeworkstartdate = data.startTime;
+            data.homeworkbody = data.explain;
+            data.homeworkname = data.workName;
+            data.courseid = keys.courseId;
+            delete data.closeTime;
+            delete data.workName;
+            delete data.explain;
+            delete data.startTime;
             return new Promise((resolve, reject) => {
-                Vue.http.post("123", { courseId: rootState.course.currentCourseId }, { withCredentials: true, emulateJSON: true }).then(response => {
-                    if (response.status === 200) {
-                      
+                Vue.http.post(MYURL.WorkCreate, JSON.stringify(data), { withCredentials: true }).then(response => {
+                    if (response.status === 200 && response.body.code === 1) {
+
                         resolve();
                     } else {
                         reject();
@@ -71,26 +93,92 @@ const WorkModule = {
                 })
             })
         },
-        GetWorkByIdAction({ state, commit, rootState }, workId) {
+        //获取作业详情
+        GetWorkByIdAction({ state, commit, rootState }, keys) {
+            var data = {
+                homeworkid: keys.workId,
+            };
+
             return new Promise((resolve, reject) => {
-                Vue.http
-                    .post(
-                        "123",
-                        { workId: workId },
-                        { withCredentials: true, emulateJSON: true }
-                    )
-                    .then(response => {
-                        if (response.status === 200) {
-                            resolve(response.body.workDetail);
-                        } else {
-                            reject();
-                        }
-                    })
-                    .catch(error => {
+                Vue.http.post(MYURL.WorkDetail, JSON.stringify(data), { withCredentials: true }).then(response => {
+                    if (response.status === 200 && response.body.code === 1) {
+                        var workDetail = response.body.myBody;
+
+                        workDetail.workId = workDetail.homeworkid;
+                        workDetail.closeTime = workDetail.homeworkenddate;
+                        workDetail.startTime = workDetail.homeworkstartdate;
+                        workDetail.explain = workDetail.homeworkbody;
+                        workDetail.workName = workDetail.homeworkname;
+
+                        commit('SaveWorkDetail', workDetail);
+                        resolve();
+                    } else {
                         reject();
-                    });
+                    }
+                }).catch(error => {
+                    console.log(error);
+                    reject();
+                });
             });
-        }
+        },
+        //获取作业提交情况
+        GetWorkSubmissionAction({ state, commit, rootState }, keys) {
+            var data = {
+                homeworkid: keys.workId,
+            };
+
+            return new Promise((resolve, reject) => {
+                Vue.http.post(MYURL.WorkSubmission, JSON.stringify(data), { withCredentials: true }).then(response => {
+                    if (response.status === 200 && response.body.code === 1) {
+                        var workSubmissionList = response.body.myBody;
+
+                        workSubmissionList.forEach(element => {
+                            element.studentId = element.studentid;
+                            element.studentName = element.studentname;
+                        });
+
+                        commit('SaveWorkSubmissionList', workSubmissionList);
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                }).catch(error => {
+                    console.log(error);
+                    reject();
+                });
+            });
+        },
+        //更新作业详情
+        UpDateWorkDetailAction({ state, commit, rootState }, keys) {
+            var data = keys.workDetail;
+            return new Promise((resolve, reject) => {
+                Vue.http.post(MYURL.WorkCreate, JSON.stringify(data), { withCredentials: true }).then(response => {
+                    if (response.status === 200 && response.body.code === 1) {
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                }).catch(error => {
+                    reject();
+                });
+            });
+        },
+        //更新作业提交情况
+        UpDateWorkSubmissionAction({ state, commit, rootState }, keys) {
+            var data = keys.tableData;
+            return new Promise((resolve, reject) => {
+                Vue.http.post(MYURL.WorkSubmissionUp, JSON.stringify(data), { withCredentials: true }).then(response => {
+                    if (response.status === 200 && response.body.code === 1) {
+
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                }).catch(error => {
+                    reject();
+                });
+            });
+        },
     },
     getters: {
         GetWorkListByState: (state) => (workState) => {

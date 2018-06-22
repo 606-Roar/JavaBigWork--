@@ -28,7 +28,7 @@
             </el-upload>
           </div> -->
                     <div class="next">
-                        <el-button>返回</el-button>
+                        <el-button @click="back">返回</el-button>
                         <el-button type="primary" @click="AddNewCourse()" :disabled="nextState">下一步</el-button>
                     </div>
                     <p>{{ifnext}}</p>
@@ -101,12 +101,21 @@ export default {
         ...mapActions(["IntoProjectDetailsAction", "AddNewCourseAction"]),
         async AddNewCourse() {
             try {
-                let keys = { courseName: this.courseName };
+                let keys = {
+                    teacherId: this.$route.params.teacherId,
+                    courseName: this.courseName
+                };
                 await this.AddNewCourseAction(keys);
+                this.back();
             } catch (error) {
-                this.$message.error('错了哦，这是一条错误消息');
+                this.$notify.error("出错了");
                 console.log(error);
             }
+        },
+        back() {
+            this.$router.push({
+                name: "Home"
+            });
         }
         // handlePictureCardPreview(file) {
         //     console.log(file);

@@ -1,45 +1,70 @@
 <template>
-	<div class="base">
-		<el-container>
-			<el-header height="55px">
-				<el-row>
-					<div class="position">首页</div>
-				</el-row>
-			</el-header>
-			<el-container>
-				<el-main>
-					<p>老师你好</p>
-					
-					<h1>快速导航</h1>
-					
-					<div class="quick-nav">
-						<el-button type="primary">今天点名</el-button>
-						<el-button type="primary">成绩录入</el-button>
-						<el-button type="primary">导入学生</el-button>
-					</div>
-				</el-main>
-			</el-container>
-		</el-container>
-	</div>
+    <div class="base">
+        <el-container>
+            <el-header height="55px">
+                <el-row>
+                    <div class="position">首页</div>
+                </el-row>
+            </el-header>
+            <el-container>
+                <el-main>
+                    <p>老师你好</p>
+
+                    <!-- <h1>快速导航</h1> -->
+
+                    <div class="quick-nav">
+                        <!-- <el-button type="primary" @click="GetNewAttendance()">今天点名</el-button> -->
+                        <!-- <el-button type="primary">成绩录入</el-button>
+                        <el-button type="primary">导入学生</el-button> -->
+                    </div>
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
 </template>
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
-        return {};
+        return {
+            loading:null,
+        };
     },
     created() {},
     computed: {
         ...mapState({})
     },
     methods: {
-        ...mapActions([""])
+        ...mapActions([""]),
+        async GetNewAttendance() {
+            this.loading = this.$loading({
+                lock: true,
+                text: "Loading",
+                spinner: "el-icon-loading",
+                background: "rgba(0, 0, 0, 0.7)"
+            });
+            try {
+                let attendanceId = await this.AddNewAttendanceDetailsAction(
+                    this.$route.params.CourseId
+                );
+                this.$router.push({
+                    name: "SingleAttendance",
+                    params: {
+                        attendanceId: attendanceId
+                    }
+                });
+            } catch (error) {
+                this.$notify.error("抱歉，出了点问题");
+                // console.log(error);
+            } finally {
+                this.loading.close();
+            }
+        }
     }
 };
 </script>
 <style scoped>
-.quick-nav{
-	
+.quick-nav {
 }
 .el-button {
     width: 240px;

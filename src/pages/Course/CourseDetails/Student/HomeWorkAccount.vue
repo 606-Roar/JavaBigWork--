@@ -1,103 +1,63 @@
 <template>
-  <div class="base">
-    <el-container>
-      <el-header height="55px">
-        <el-row>
-          <div class="position">作业情况</div>
-        </el-row>
-      </el-header>
-      <el-container>
-        <el-main>
-          <el-row>
-            <div class="tools">
-              <el-col :span="6">
-                <el-input class="search" size="medium" :placeholder="placeholder" prefix-icon="el-icon-search" v-model="searchKey">
-                </el-input>
-              </el-col>
-              <el-col class="buttons" :span="14" style=" float: right;">
-                <el-button class="button" type="primary" size="small" @click="addStaffDialog.dialogVisible = true">管理成员</el-button>
-                <el-button class="button" size="small" @click="managerDialog.dialogVisible = true">管理角色</el-button>
-              </el-col>
-            </div>
-          </el-row>
-          <el-table :data="tableData"   style="width: 100%" height="500px" size="meduim">
-            <el-table-column sortable label="姓名" align="center" prop="studentName" width="150px">
-            </el-table-column>
-            <el-table-column v-for="item in workList" :key="item.name" :label="item.name"  :prop="item.name" min-width="100px">
-            </el-table-column>
-          </el-table>
-        </el-main>
-      </el-container>
-    </el-container>
-    <!--管理成员  -->
-    <el-dialog class="dialog" title="管理成员" :visible.sync="addStaffDialog.dialogVisible" width="30%">
-      <p>项目角色</p>
-      <el-select v-model="addStaffDialog.value" placeholder="请选择">
-        <el-option v-for="item in MyTabs" :key="item.position" :label="item.position" :value="item.position">
-        </el-option>
-      </el-select>
-      <p>项目成员</p>
-      <el-input v-model="addStaffDialog.input" placeholder="请输入内容"></el-input>
-      <span slot="footer" class="addStaffDialog-footer">
-        <el-button @click="addStaffDialog.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="AddStaff()">确 定</el-button>
-      </span>
-    </el-dialog>
-    <!--管理角色  -->
-    <el-dialog class="dialog" title="管理角色" :visible.sync="managerDialog.dialogVisible" width="40%">
-      <el-dialog width="30%" title="删除角色" :visible.sync="innerDialog.innerVisible" append-to-body top="25vh">
-        <p>当前角色[{{innerDialog.position}}]会被删除，此操作不可撤销，是否确定删除？</p>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="innerDialog.innerVisible = false">取 消</el-button>
-          <el-button type="primary" @click="RemoveTab">确 定</el-button>
-        </span>
-      </el-dialog>
-      <div>
-        <el-input v-model="managerDialog.newpostion" placeholder="输入新的角色名" style="width:150px;margin-right:10px;" size="small"></el-input>
-        <el-button type="text" @click="AddPostion">添加</el-button>
-      </div>
-      <el-table :data="MyTabs">
-        <el-table-column property="position" label="角色"></el-table-column>
-        <el-table-column property="number" label="人数"></el-table-column>
-        <el-table-column label="操作" align="left">
-          <template slot-scope="scope">
-            <div @click="ConfirmDelete(scope.row.position)">
-              <i v-if="scope.row.position!='项目成员'" class="el-icon-close"></i>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="managerDialog.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="managerDialog.dialogVisible = false">确 定</el-button>
-      </span>
-    </el-dialog>
-  </div>
+    <div class="base">
+        <el-container>
+            <el-header height="55px">
+                <el-row>
+                    <div class="position">作业情况</div>
+                </el-row>
+            </el-header>
+            <el-container>
+                <el-main>
+                    <el-row>
+                        <div class="tools">
+                            <el-col :span="6">
+                                <el-input class="search" size="small" :placeholder="placeholder" prefix-icon="el-icon-search" v-model="searchKey">
+                                </el-input>
+                            </el-col>
+
+                        </div>
+                    </el-row>
+                    <el-table :data="tableData" style="width: 100%"  size="small">
+                        <el-table-column sortable label="姓名" align="center" prop="studentName" width="150px">
+                        </el-table-column>
+                        <el-table-column v-for="item in workList" :key="item.name" :label="item.name" :prop="item.name" min-width="100px">
+                        </el-table-column>
+                    </el-table>
+                    <el-pagination small layout="prev, pager, next" :total="total"  :page-size="pagesize" :current-page.sync="currentPage">
+                    </el-pagination>
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
 </template>
 <script>
+import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
         return {
+            total: 0, //默认数据总数
+            pagesize: 15, //每页的数据条数
+            currentPage: 1, //默认开始页面
             workList: [
-              {
-                name:"work1"
-              },
-              {
-                name:"work2"
-              },
-              {
-                name:"work3"
-              },
-              {
-                name:"work4"
-              },
-              {
-                name:"work5"
-              },
-              {
-                name:"work6"
-              },
-              ],
+                {
+                    name: "work1"
+                },
+                {
+                    name: "work2"
+                },
+                {
+                    name: "work3"
+                },
+                {
+                    name: "work4"
+                },
+                {
+                    name: "work5"
+                },
+                {
+                    name: "work6"
+                }
+            ],
             managerDialog: {
                 input: "",
                 dialogVisible: false,
@@ -116,8 +76,8 @@ export default {
             placeholder: "搜索项目成员",
             searchKey: "",
             tabPosition: "left",
-            tableData: [{ studentId: "1", studentName: "1" }],
-            tabs: [{ studentId: "", studentName: "" }]
+            tableData: [{ studentId: "1", studentName: "1" }], //显示数据
+            tabs: [{ studentId: "", studentName: "" }] //原始数据
         };
     },
     watch: {
@@ -131,11 +91,12 @@ export default {
             });
         }
     },
-    created() {},
+    created() {
+        this.Init();
+    },
     methods: {
+        ...mapActions(["GetStudentsWorkSubmissionAction"]),
         HandleClick(tab, event) {
-            // console.log(tab, event);
-            // console.log(this.TabsValue);
             if (this.TabsValue === "项目成员") {
                 //项目成
                 this.tableData = [].concat(this.tabs);
@@ -149,52 +110,6 @@ export default {
                     })
                 );
             }
-        },
-        RemoveTab() {
-            let temp;
-            let i;
-            for (i = 0; i < this.MyTabs.length; i++) {
-                if (this.MyTabs[i].position === this.innerDialog.position) {
-                    temp = this.MyTabs[i];
-                    break;
-                }
-            }
-            if (temp.number === 0) {
-                //success
-                this.MyTabs.splice(i, 1);
-                this.$message({
-                    message: "删除成功",
-                    type: "success"
-                });
-                this.innerDialog.innerVisible = false;
-            } else {
-                //fail
-                this.$message.error("抱歉，请先清空人数");
-                this.innerDialog.innerVisible = false;
-            }
-        },
-        AddPostion() {
-            let isExist = false;
-            for (let i = 0; i < this.MyTabs.length; i++) {
-                if (this.MyTabs[i].position === this.managerDialog.newpostion) {
-                    isExist = true;
-                    break;
-                }
-            }
-            if (!isExist) {
-                this.MyTabs.push({
-                    position: this.managerDialog.newpostion,
-                    name: this.managerDialog.newpostion,
-                    number: 0
-                });
-                this.$message.success("添加成功");
-            } else {
-                this.$message.error("添加失败：角色名已存在");
-            }
-        },
-        ConfirmDelete(position) {
-            this.innerDialog.position = position;
-            this.innerDialog.innerVisible = true;
         },
         AddStaff() {
             if (this.addStaffDialog.value === "项目成员") {
@@ -214,48 +129,23 @@ export default {
                 this.MyTabs[1].number++;
             }
             this.HandleClick({}, {});
-            this.$message.success("添加成功");
+            this.$notify.success("添加成功");
             this.addStaffDialog.dialogVisible = false;
         },
-        RemoveStaff(row) {
-            // console.log(row)
-            let i;
-            for (i = 0; i < this.tabs.length; i++) {
-                if (this.tabs[i].position === row.position) {
-                    break;
-                }
+        async GetStudentsWorkSubmission() {
+            try {
+                let object = {
+                    courseId: this.$router.params.courseId
+                };
+                this.tabs = await this.GetStudentsWorkSubmissionAction(object);
+            } catch (error) {
+                this.$notify.error("服务器繁忙");
             }
-            this.$confirm("此操作将删除该成员, 是否继续?", "提示", {
-                confirmButtonText: "确定",
-                cancelButtonText: "取消",
-                type: "warning"
-            })
-                .then(() => {
-                    this.tabs.splice(i, 1);
-                    this.$message({
-                        type: "success",
-                        message: "删除成功!请处理后续事情"
-                    });
-                    this.HandleClick({}, {});
-                    this.UpNumber();
-                })
-                .catch(() => {
-                    this.$message({
-                        type: "info",
-                        message: "已取消删除"
-                    });
-                    this.HandleClick({}, {});
-                    this.UpNumber();
-                });
         },
-        UpNumber() {
-            this.MyTabs[0].number = this.tabs.length;
-            for (var i = 1; i < this.MyTabs.length; i++) {
-                this.MyTabs[i].number = this.tabs.filter(object => {
-                    return object.position === this.MyTabs[i].position;
-                }).length;
-            }
-        }
+        Init() {
+            this.GetStudentsWorkSubmission();
+        },
+        current_change() {}
     }
 };
 </script>
@@ -325,7 +215,7 @@ export default {
     /*margin: 10px;*/
     /*height: 90%;*/
     /*min-width:1200px;*/
-    margin: 10px;
+    /* margin: 10px; */
 }
 
 .el-row {

@@ -31,11 +31,11 @@ export default {
         };
     },
     created: function() {
-        console.log(this.$route.params.projectId);
-        this.IntoProjectDetailsAction(this.$route.params.projectId);
+        
+        // this.IntoProjectDetailsAction(this.$route.params.projectId);
     },
     methods: {
-        ...mapActions(["IntoProjectDetailsAction"])
+        // ...mapActions([""])
     },
     components: {
         Asidenav

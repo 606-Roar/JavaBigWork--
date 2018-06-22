@@ -24,6 +24,10 @@ import TeacherList from '@/pages/TeacherManager/TeacherManagerDetails/TeacherLis
 
 
 import MainPage from '@/pages/mainPage'
+import Test from '@/pages/test'
+
+
+
 import Organization from '@/pages/Organization/organization'
 import OrOption1 from '@/pages/Organization/organizationoption/oroption1'
 import Orchengyuan from '@/pages/Organization/organizationoption/orchengyuan'
@@ -69,9 +73,9 @@ const vueRouter = new Router({
   routes: [
     { path: '', redirect: { name: '登录' } },
     { path: '/login', name: '登录', component: Login },
-
+    { path: '/test', name: 'test', component: Test },
     {
-      path: '/Home/:userName',
+      path: '/Home/:teacherId',
       name: 'Home',
       component: MainPage,
       redirect: { name: 'CourseList' },

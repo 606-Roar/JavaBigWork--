@@ -97,7 +97,8 @@ For a detailed explanation on how things work, check out the [guide](http://vuej
 >### 学生
 >- [ ] 增、删、改、查
 >### 考勤
->- [ ] 增、改、查
+>- [ ] 新增考勤
+>- [ ] 修改考勤记录
 >- [ ] 缺课统计
 >### 作业
 >- [ ] 增、删、改、查

@@ -7,6 +7,7 @@ import CourseModule from './modules/Course.js'
 import AttendanceModule from './modules/Attendance.js'
 import WorkModule from './modules/Work.js'
 import StudentModule from './modules/Student.js'
+import TeacherModule from './modules/Teacher.js'
 import MYURL from '../const/MYURL.js'
 
 Vue.use(Vuex)
@@ -155,7 +156,7 @@ const store = new Vuex.Store({
     attendance: AttendanceModule, // attendance moudle
     work: WorkModule,
     student: StudentModule,
-
+    teacher:TeacherModule,
     // staff: Staff, //staff moudle
     // task: Task, //task moudle
   }

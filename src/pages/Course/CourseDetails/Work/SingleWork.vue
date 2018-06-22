@@ -10,39 +10,32 @@
                 </el-row>
             </el-header>
             <p>1</p>
+            <!-- <el-main> -->
             <el-tabs type="border-card" style="">
                 <el-tab-pane label="作业内容">
-                    <el-form ref="form" :model="form" label-width="80px">
+                    <el-form ref="form" :model="workDetail" label-width="80px">
                         <el-form-item label="作业名称" size="medium">
-                            <el-input v-model="form.name"></el-input>
+                            <el-input v-model="workDetail.workName"></el-input>
                         </el-form-item>
-
                         <el-form-item label="开放时间">
                             <el-col :span="11">
-                                <el-date-picker type="date" placeholder="选择日期" v-model="form.date1" style="width: 100%;"></el-date-picker>
+                                <el-date-picker type="date" placeholder="选择日期" v-model="workDetail.startTime" style="width: 100%;" format="yyyy-MM-dd" value-format="yyyy-MM-dd"></el-date-picker>
                             </el-col>
                             <el-col class="line" :span="2">-</el-col>
                             <el-col :span="11">
-                                <el-time-picker type="fixed-time" placeholder="选择时间" v-model="form.date2" style="width: 100%;"></el-time-picker>
+                                <el-date-picker type="date" placeholder="选择时间" v-model="workDetail.closeTime" style="width: 100%;" format="yyyy-MM-dd" value-format="yyyy-MM-dd"></el-date-picker>
                             </el-col>
                         </el-form-item>
-                        <el-form-item label="文件资源">
-                            <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="3" :on-exceed="handleExceed" :file-list="fileList">
-                                <el-button size="small" type="primary">点击上传</el-button>
-                                <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
-                            </el-upload>
-                        </el-form-item>
+                        
                         <el-form-item label="补充说明">
-                            <el-input type="textarea" v-model="form.desc"></el-input>
+                            <el-input type="textarea" v-model="workDetail.explain"></el-input>
                         </el-form-item>
                     </el-form>
+                    <el-button class="save-button" type="primary" @click="SaveWorkDetail()">保存</el-button>
 
-                    <el-button class="save-button" type="primary">编辑</el-button>
                 </el-tab-pane>
                 <el-tab-pane label="提交情况">
-                    <el-table :data=" tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" size="small" style="width: 100% ;" height="480px" @selection-change="handleSelectionChange">
-                        <el-table-column v-if="pageState==='edit'" type="selection" width="55" align="center">
-                        </el-table-column>
+                    <el-table :data=" tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" size="small" @selection-change="handleSelectionChange">
 
                         <el-table-column label="学号" align="left">
                             <template slot-scope="scope">
@@ -51,22 +44,22 @@
                         </el-table-column>
                         <el-table-column label="姓名" align="left" prop="studentName">
                         </el-table-column>
-                        <el-table-column label="成绩" align="left" prop="studentName">
+                        <el-table-column label="成绩" align="left" prop="grade">
+                            <template slot-scope="scope">
+                                <el-input type="number" :disabled="isEdit" size="mini" style="width:100px" v-model="scope.row.grade" placeholder="请输入成绩"></el-input>
+
+                            </template>
                         </el-table-column>
-                        <!-- <el-table-column v-if="pageState==='edit'" label="操作" align="center">
-              <template slot-scope="scope">
-                <div @click="RemoveStaff(scope.row)">
-                  <i class="el-icon-close"></i>
-                </div>
-              </template>
-            </el-table-column> -->
                     </el-table>
                     <el-pagination small layout="prev, pager, next" :total="total" @current-change="current_change">
                     </el-pagination>
+                    <el-button v-if="!isShow" class="save-button" @click="Cancel()">取消</el-button>
+                    <el-button class="save-button" type="primary" @click="SubmissionEdit()">{{word}}</el-button>
+
                 </el-tab-pane>
 
             </el-tabs>
-
+            <!-- </el-main> -->
         </el-container>
     </div>
 </template>
@@ -75,9 +68,12 @@ import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
         return {
-            total: 15, //默认数据总数
+            total: 2, //默认数据总数
             pagesize: 11, //每页的数据条数
             currentPage: 1, //默认开始页面
+            isEdit: true,
+            isShow: true,
+            word: "编辑",
             form: {
                 name: "",
                 region: "",
@@ -88,32 +84,136 @@ export default {
                 resource: "",
                 desc: ""
             },
+            fileList: [],
             value6: "123",
             tabPosition: "left",
             radio2: 0,
             tableData: [],
             workDetail: {
-                workName: ".."
+                workId: "",
+                workName: "",
+                startTime: "",
+                closeTime: "",
+                type: "",
+                workState: "",
+                explain: ""
             }
         };
     },
     created() {
         this.InitData();
     },
+    computed: {
+        ...mapState({ work: state => state.work })
+    },
+    watch: {
+        tableData: function(newQuestion, oldQuestion) {
+            this.total = this.tableData.length;
+        }
+    },
     methods: {
-        ...mapActions(["GetWorkByIdAction"]),
-        filterHandler(value, row, column) {
-            const property = column["property"];
-            return row[property] === value;
-        },
-        async InitData() {
+        ...mapActions([
+            "GetWorkByIdAction", //获取作业详情
+            "UpDateWorkDetailAction", //更新作业详情
+            "UpDateWorkSubmissionAction", //更新作业提交情况
+            "GetWorkSubmissionAction" //获取作业提交详情
+        ]),
+        async GetWorkSubmission() {
             try {
-                this.workDetail = await GetWorkByIdAction(this.$route.params.workId);
+                await this.GetWorkSubmissionAction({
+                    workId: parseInt(this.$route.params.workId)
+                });
             } catch (error) {
-                this.$message.error("请求失败了😫")
+                console.log(error);
+            } finally {
+                console.log("GetWorkSubmission");
+                this.tableData = this.work.workSubmissionList;
             }
         },
-        
+        async GetWorkById() {
+            try {
+                await this.GetWorkByIdAction({
+                    workId: this.$route.params.workId
+                });
+            } catch (error) {
+            } finally {
+                console.log("GetWorkById");
+                // console.log(this.workDetail,this.work.workDetail)
+                this.workDetail = this.work.workDetail;
+            }
+        },
+        InitData() {
+            this.GetWorkSubmission();
+            this.GetWorkById();
+        },
+        //save detail
+        async SaveWorkDetail() {
+            let loading = this.$loading({
+                lock: true,
+                text: "Loading",
+                spinner: "el-icon-loading",
+                background: "rgba(0, 0, 0, 0.7)"
+            });
+            try {
+                await this.UpDateWorkDetailAction({
+                    workDetail: this.workDetail
+                });
+            } catch (error) {
+                this.$notify.error("保存失败😫");
+            } finally {
+                loading.close();
+            }
+        },
+
+        // 作业
+        Cancel() {
+            this.$confirm("继续将放弃修改,是否继续", "提示", {
+                confirmButtonText: "确定",
+                cancelButtonText: "取消",
+                type: "warning"
+            })
+                .then(() => {
+                    this.$notify.info("已取消编辑");
+                    this.isShow = true;
+                    this.isEdit = true;
+                    this.word = "编辑";
+
+                    this.GetWorkSubmission();
+                })
+                .catch(() => {
+                    this.GetWorkSubmission();
+                });
+        },
+        SubmissionEdit() {
+            if (this.word === "编辑") {
+                //点击了编辑
+                this.word = "保存";
+                this.isShow = false;
+                this.isEdit = false;
+            } else {
+                //点击了保存
+                this.SaveWorkSubmission();
+            }
+            this.GetWorkSubmission();
+        },
+        async SaveWorkSubmission() {
+            try {
+                await this.UpDateWorkSubmissionAction({
+                    tableData: this.tableData
+                });
+                this.word = "编辑";
+                this.isShow = true;
+                this.isEdit = true;
+            } catch (error) {
+                this.$notify.error("保存失败😫");
+            }
+        },
+        current_change() {},
+        handleSelectionChange() {},
+        handleExceed() {},
+        handlePreview() {},
+        handleRemove() {},
+        beforeRemove() {}
     }
 };
 </script>

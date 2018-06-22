@@ -18,7 +18,10 @@ export default {
         TopHeader
     },
     computed: {},
-    mounted() {}
+    mounted() {},
+    created(){
+        
+    }
 };
 </script>
 <style>

@@ -1,14 +1,14 @@
 <template>
-  <div class="base">
-    <el-container>
-      <el-aside width="180px">
-        <asidenav :title="title" :data="data"></asidenav>
-      </el-aside>
-      <el-main>
-        <router-view></router-view>
-      </el-main>
-    </el-container>
-  </div>
+    <div class="base">
+        <el-container>
+            <el-aside width="180px">
+                <asidenav :title="title" :data="data"></asidenav>
+            </el-aside>
+            <el-main>
+                <router-view></router-view>
+            </el-main>
+        </el-container>
+    </div>
 </template>
 <script>
 import Asidenav from "../../components/Nav/nav.vue";
@@ -34,7 +34,7 @@ export default {
                     { type: 1, menuname: "筛选器" },
                     { type: 1, menuname: "默认", url: "统计数据" },
                     { type: 3, menuname: "学生", url: "Student" },
-                    { type: 3, menuname: "作业情况", url: "HomeWorkAccount" },
+                    // { type: 3, menuname: "作业情况", url: "HomeWorkAccount" },
                     { type: 3, menuname: "成绩", url: "GradeAccount" }
                 ],
                 [
@@ -46,18 +46,33 @@ export default {
         };
     },
     created: function() {
-        this.title=this.$route.params.courseName;
-        // console.log(this.$route.params.courseName);
-        // this.IntoProjectDetailsAction(this.$route.params.projectId);
+    
+        this.title = this.$route.params.courseName;
+        if(this.title===undefined){
+            this.Init();
+        }
     },
     methods: {
-        ...mapActions(["IntoProjectDetailsAction"])
+        ...mapActions(["GetCourseAction"])
     },
     components: {
         Asidenav
     },
     mounted: function() {
         // console.log('width'+width);
+    },
+    methods: {
+        async Init() {
+            try {
+                let course = await this.GetCourseAction(
+                    this.$route.params.courseId
+                );
+                this.title = course.courseName;
+            } catch (error) {
+                this.$notify.error("获取课程信息网络请求失败😭");
+            } finally {
+            }
+        }
     }
 };
 </script>

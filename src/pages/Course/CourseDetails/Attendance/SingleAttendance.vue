@@ -16,11 +16,9 @@
                             <el-card shadow="never">
                                 <div>
                                     <p class="second-title">
-                                        <!-- <i class="el-icon-arrow-left" style="cursor:pointer" @click="BeforeStudent()"></i> -->
-                                        {{tableData[tableIndex].id}} {{tableData[tableIndex].name}}
-                                        <!-- <i class="el-icon-arrow-right" style="cursor:pointer" @click="NextStudent()"></i> -->
+                                        {{tableData[tableIndex].studentId}} {{tableData[tableIndex].studentName}}
                                     </p>
-                                    <el-radio-group v-model="tableData[tableIndex].state" :change="HandleChange(tableData[tableIndex].state)">
+                                    <el-radio-group v-model="tableData[tableIndex].attendanceDetail" :change="HandleChange(tableData[tableIndex].attendanceDetail)">
                                         <el-radio label='迟到'>迟到</el-radio>
                                         <el-radio label="到课">到课</el-radio>
                                         <el-radio label="旷课">旷课</el-radio>
@@ -30,20 +28,20 @@
                             </el-card>
                         </el-col>
                     </el-row>
-                    <el-table :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" style="width: 100% ;margin-top:5px" sortable size="mini">
+                    <el-table :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" sortable size="mini">
                         <el-table-column label="学号" align="left">
                             <template slot-scope="scope">
-                                <span style="margin-left: 0px">{{ scope.row.id }}</span>
+                                <span style="margin-left: 0px">{{ scope.row.studentId }}</span>
                             </template>
                         </el-table-column>
                         <el-table-column label="成员名" align="left">
                             <template slot-scope="scope">
-                                <span style="margin-left: 0px">{{ scope.row.name }}</span>
+                                <span style="margin-left: 0px">{{ scope.row.studentName }}</span>
                             </template>
                         </el-table-column>
                         <el-table-column label="考勤" align="left">
                             <template slot-scope="scope">
-                                <el-select v-model=" scope.row.state" placeholder="请选择" size="small">
+                                <el-select v-model=" scope.row.attendanceDetail" placeholder="请选择" size="small">
                                     <el-option v-for="item in stateOptions" :key="item.value" :label="item.label" :value="item.value" :disabled="item.disabled">
                                     </el-option>
                                 </el-select>
@@ -51,9 +49,9 @@
                             </template>
                         </el-table-column>
                     </el-table>
-                    <el-pagination small layout="prev, pager, next" :total="total" @current-change="current_change">
+                    <el-pagination small layout="prev, pager, next" :total="total" :page-size="pagesize" :current-page.sync="currentPage">
                     </el-pagination>
-                    <el-button type="primary" class="save-button" @click="absentDialog.dialogVisible =true">保存</el-button>
+                    <el-button type="primary" class="save-button" @click="SaveAttendance">保存</el-button>
                 </el-main>
             </el-container>
         </el-container>
@@ -61,7 +59,7 @@
             <el-table :data="singleAbsentTableData" stripe style="width: 100%">
                 <el-table-column prop="state" label="状态" align="left">
                 </el-table-column>
-                <el-table-column prop="StudentNames" label="姓名" align="left">
+                <el-table-column prop="studentsName" label="姓名" align="left">
                 </el-table-column>
             </el-table>
             <span slot="footer" class="dialog-footer">
@@ -76,8 +74,8 @@ import { mapState, mapGetters, mapActions } from "vuex";
 export default {
     data() {
         return {
-            total: 10, //默认数据总数
-            pagesize: 10, //每页的数据条数
+            total: 0, //默认数据总数
+            pagesize: 15, //每页的数据条数
             currentPage: 1, //默认开始页面
             reportName: "123",
             tableIndex: 0,
@@ -107,19 +105,27 @@ export default {
             tableData: [{}],
             singleAbsentTableData: [
                 {
+                    state: "迟到",
+                    studentsName: "无"
+                },
+                {
+                    state: "旷课",
+                    studentsName: "无"
+                },
+                {
                     state: "请假",
-                    StudentNames: "冲刺,wo,123"
+                    studentsName: "无"
                 }
             ]
         };
     },
     created() {
-        try {
-            this.reportName = this.$route.params.attendanceName;
-            this.attendanceId = this.$route.params.attendanceId;
-            this.GetAttendanceDetailListAction();
-            this.tableData = this.attendance.attendanceDetailList;
-        } catch (error) {}
+        this.Init();
+    },
+    watch: {
+        tableData() {
+            this.total = this.tableData.length;
+        }
     },
     computed: {
         ...mapState({
@@ -128,11 +134,30 @@ export default {
         })
     },
     methods: {
-        ...mapActions(["GetAttendanceDetailListAction"]),
-
+        ...mapActions([
+            "GetAttendanceDetailListAction",
+            "UpLoadAttendanceDetailsAction"
+        ]),
+        async Init() {
+            try {
+                this.reportName = this.$route.params.attendanceName;
+                this.attendanceId = this.$route.params.attendanceId;
+                await this.GetAttendanceDetailListAction({
+                    attendanceId: this.attendanceId
+                });
+            } catch (error) {
+                this.$notify.error("获取学生列表失败");
+                console.log(error);
+            } finally {
+                this.tableData = this.attendance.attendanceDetailList;
+            }
+        },
         HandleChange(value) {
             // console.log(value);
-            if (value != "") this.NextStudent();
+            if (value != "undefined") {
+                console.log(value != "undefined");
+                this.NextStudent();
+            }
         },
         RadioChange(label) {
             console.log(label);
@@ -151,13 +176,55 @@ export default {
             const property = column["property"];
             return row[property] === value;
         },
-        current_change(currentPage) {
-            this.currentPage = currentPage;
+        async HandleSave() {
+            //上传
+            try {
+                await this.UpLoadAttendanceDetailsAction({
+                    mylist: this.tableData
+                });
+                this.$notify.success("上传成功");
+                this.absentDialog.dialogVisible = false;
+            } catch (error) {
+                this.$notify.error("上传失败");
+            } finally {
+            }
         },
-        HandleSave() {
-            absentDialog.dialogVisible = false;
-        },
-        handleClose() {}
+        handleClose() {},
+        SaveAttendance() {
+            let lateList = this.tableData.filter(item => {
+                return item.attendanceDetail === "迟到";
+            });
+            let leaveList = this.tableData.filter(item => {
+                return item.attendanceDetail === "请假";
+            });
+            let truantList = this.tableData.filter(item => {
+                return item.attendanceDetail === "旷课";
+            });
+            console.log(lateList);
+            console.log(leaveList);
+            console.log(truantList);
+            //1
+            let temp = [];
+
+            for (let i = 0; i < lateList.length; i++) {
+                temp.push(lateList[i].studentName);
+            }
+            this.singleAbsentTableData[0].studentsName = temp.join(",");
+            //2
+            temp = [];
+            for (let i = 0; i < leaveList.length; i++) {
+                temp.push(leaveList[i].studentName);
+            }
+            this.singleAbsentTableData[1].studentsName = temp.join(",");
+            //3
+            temp = [];
+            for (let i = 0; i < truantList.length; i++) {
+                temp.push(truantList[i].studentName);
+            }
+            this.singleAbsentTableData[2].studentsName = temp.join(",");
+
+            this.absentDialog.dialogVisible = true;
+        }
     }
 };
 </script>

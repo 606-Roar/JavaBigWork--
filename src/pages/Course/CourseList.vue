@@ -5,7 +5,7 @@
                 <el-main>
                     <div>
                         <div class="container-header">
-                            <div class="title">本学期课程</div>
+                            <div class="title">我的课程</div>
                             <div class="right-content">
                                 <router-link :to="{name: 'CourseCreate'}">
                                     <i class="el-icon-plus"></i>
@@ -14,15 +14,15 @@
                             </div>
                         </div>
                         <div class="projectlist">
-                            <div class="projectitem" v-for="item in course.nowCourseList" :key="item.courseId">
+                            <div class="projectitem" v-for="item in course.courseList" :key="item.courseId">
                                 <router-link :to="{name: 'CourseDetails', params: {courseId: item.courseId,courseName:item.courseName}}">
-                                    <projectItem :courseName="item.courseName" :img="item.projectLogo" :courseId="item.courseId" :state="item.projectState">
+                                    <projectItem :courseName="item.courseName" :img="item.img" :courseId="item.courseId" :state="item.projectState">
                                     </projectItem>
                                 </router-link>
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <!-- <div>
                         <div class="container-header">
                             <div class="title">已完结的课程</div>
                         </div>
@@ -33,7 +33,7 @@
                                 </router-link>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </el-main>
             </el-container>
         </div>
@@ -68,7 +68,10 @@ export default {
         ...mapActions(["GetCourseListAction"]),
         async GetCourseList() {
             try {
-                await this.GetCourseListAction();
+                let keys={
+                    teacherId:this.$route.params.teacherId
+                };
+                await this.GetCourseListAction(keys);
             } catch (error) {
                 console.log(error);
             }

@@ -63,23 +63,33 @@ export default {
             this.$refs[formName].validate(valid => {
                 if (valid) {
                     this.loading = true;
+                    var data = {
+                        teacherid: parseInt(this.loginForm.userName),
+                        password: this.loginForm.passWord
+                    };
                     this.$http
-                        .post(MYURL.LOGIN, {
-                            teacherid:this.loginForm.userName,
-                            // name: this.loginForm.userName,
-                            password: this.loginForm.passWord
-                        },
-                            {emulateJSON :true}
+                        .post(
+                            MYURL.Login,
+                            JSON.stringify(data)
+                            // {
+                            //     headers:{
+                            //         "Content-Type":"text/json;charset=UTF-8"
+                            //     }
+                            // }
+                            // { emulateJSON: true }
                         )
                         .then(response => {
-                            if (response.status === 200) {
+                            if (
+                                response.status === 200 &&
+                                response.body.code === 1
+                            ) {
                                 console.log(response.body);
                                 console.log("验证通过");
                                 let userInfo = {
-
                                     userName: UserName,
-                                    userId: this.loginForm.userName,
+                                    userId: this.loginForm.userName
                                 };
+                                
                                 //保存用户信息
                                 this.LoginAction(userInfo);
                                 console.log(
@@ -94,19 +104,19 @@ export default {
 
                                 this.$router.push({
                                     name: "Home",
-                                    params: { userName: UserName }
+                                    params: { teacherId: UserName }
                                 });
                             } else {
-                                this.$message.error("用户名或密码错误");
+                                this.$notify.error("用户名或密码错误");
                             }
                             this.loading = false;
                         })
                         .catch(error => {
-                            this.$router.push({
-                                name: "Home",
-                                params: { userName: UserName }
-                            });
-                            this.$message.error("服务器问题");
+                            // this.$router.push({
+                            //     name: "Home",
+                            //     params: { userName: UserName }
+                            // });
+                            this.$notify.error("服务器问题");
                             this.loading = false;
                         });
                 } else {
